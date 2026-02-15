@@ -12,3 +12,10 @@ export { OAuthCredentials } from "./auth/oauth/credentials.js";
 export { OAuthToken } from "./auth/oauth/token.js";
 export { nav, findObjectByKey, findObjectsByKey } from "./navigation.js";
 export type { JsonDict, JsonList } from "./types.js";
+
+// Model types
+export type { Thumbnail, ArtistRef, AlbumRef } from "./models/common.js";
+export type { SearchOptions, SearchResult, SearchSuggestion } from "./models/search.js";
+export type { HomeSection, ArtistFull, AlbumFull, SongFull, Lyrics } from "./models/browsing.js";
+export type { WatchTrack, WatchPlaylist } from "./models/watch.js";
+export type { MoodCategory, ChartSong, ChartArtist } from "./models/explore.js";
