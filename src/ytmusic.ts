@@ -15,6 +15,7 @@ import { AuthType } from "./auth/types.js";
 import type { AuthConfig } from "./auth/types.js";
 import type { JsonDict, JsonList } from "./types.js";
 import type { LibraryOrder, Rating } from "./models/library.js";
+import type { PrivacyStatus } from "./models/playlists.js";
 
 // Mixin imports
 import * as searchMixin from "./mixins/search.js";
@@ -22,6 +23,7 @@ import * as browsingMixin from "./mixins/browsing.js";
 import * as watchMixin from "./mixins/watch.js";
 import * as exploreMixin from "./mixins/explore.js";
 import * as libraryMixin from "./mixins/library.js";
+import * as playlistMixin from "./mixins/playlists.js";
 
 export interface YTMusicConfig {
   auth?: AuthConfig;
@@ -282,5 +284,63 @@ export class YTMusic {
   /** Unsubscribe from artists. */
   unsubscribeArtists(channelIds: string[]): Promise<JsonDict> {
     return libraryMixin.unsubscribeArtists(this, channelIds);
+  }
+
+  // --- Playlists ---
+
+  /** Get playlist contents. */
+  getPlaylist(
+    playlistId: string,
+    limit: number | null = 100,
+    related = false,
+    suggestionsLimit = 0,
+  ): Promise<JsonDict> {
+    return playlistMixin.getPlaylist(this, playlistId, limit, related, suggestionsLimit);
+  }
+
+  /** Create a new playlist. */
+  createPlaylist(
+    title: string,
+    description: string,
+    privacyStatus: PrivacyStatus = "PRIVATE",
+    videoIds?: string[],
+    sourcePlaylist?: string,
+  ): Promise<string | JsonDict> {
+    return playlistMixin.createPlaylist(this, title, description, privacyStatus, videoIds, sourcePlaylist);
+  }
+
+  /** Edit a playlist's metadata. */
+  editPlaylist(
+    playlistId: string,
+    title?: string,
+    description?: string,
+    privacyStatus?: PrivacyStatus,
+    moveItem?: string | [string, string],
+    addPlaylistId?: string,
+    addToTop?: boolean,
+  ): Promise<string | JsonDict> {
+    return playlistMixin.editPlaylist(
+      this, playlistId, title, description, privacyStatus, moveItem, addPlaylistId, addToTop,
+    );
+  }
+
+  /** Delete a playlist. */
+  deletePlaylist(playlistId: string): Promise<string | JsonDict> {
+    return playlistMixin.deletePlaylist(this, playlistId);
+  }
+
+  /** Add items to a playlist. */
+  addPlaylistItems(
+    playlistId: string,
+    videoIds?: string[],
+    sourcePlaylist?: string,
+    duplicates = false,
+  ): Promise<JsonDict> {
+    return playlistMixin.addPlaylistItems(this, playlistId, videoIds, sourcePlaylist, duplicates);
+  }
+
+  /** Remove items from a playlist. */
+  removePlaylistItems(playlistId: string, videos: JsonList): Promise<string | JsonDict> {
+    return playlistMixin.removePlaylistItems(this, playlistId, videos);
   }
 }

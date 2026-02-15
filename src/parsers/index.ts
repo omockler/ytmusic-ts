@@ -7,3 +7,4 @@ export { getSearchResultType, parseTopResult, parseSearchResult, parseSearchResu
 export { parseWatchPlaylist, parseWatchTrack, getTabBrowseId } from "./watch.js";
 export { parseChartSong, parseTrendingItem, parseChartPlaylist, parseChartArtist, parseRanking } from "./explore.js";
 export { getLibraryContents, parseLibrarySongs, parsePlaylistItems, parsePlaylistItem, parseLibraryAlbums, parseAlbums, parseLibraryArtists, parseArtists } from "./library.js";
+export { validatePlaylistId, parsePlaylistHeaderMeta, parseAudioPlaylist, sumTotalDuration } from "./playlists.js";

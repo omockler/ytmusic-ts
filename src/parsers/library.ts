@@ -71,19 +71,19 @@ export function parseLibrarySongs(response: JsonDict): JsonDict {
 }
 
 /** Parse a list of playlist items (MRLIR format). */
-export function parsePlaylistItems(results: JsonList): JsonList {
+export function parsePlaylistItems(results: JsonList, isCollaborative = false): JsonList {
   const songs: JsonList = [];
   for (const result of results) {
     if (!(MRLIR in result)) continue;
     const data = result[MRLIR];
-    const song = parsePlaylistItem(data);
+    const song = parsePlaylistItem(data, false, isCollaborative);
     if (song) songs.push(song);
   }
   return songs;
 }
 
 /** Parse a single playlist item. */
-export function parsePlaylistItem(data: JsonDict): JsonDict | null {
+export function parsePlaylistItem(data: JsonDict, isAlbum = false, isCollaborative = false): JsonDict | null {
   let videoId: string | null = null;
   let setVideoId: string | null = null;
   let like: string | null = null;
@@ -117,12 +117,13 @@ export function parsePlaylistItem(data: JsonDict): JsonDict | null {
     isAvailable = data["musicItemRendererDisplayPolicy"] !== "MUSIC_ITEM_RENDERER_DISPLAY_POLICY_GREY_OUT";
   }
 
-  const usePresetColumns = !isAvailable ? true : null;
+  const usePresetColumns = (!isAvailable || isAlbum) ? true : null;
 
   let titleIndex: number | null = usePresetColumns ? 0 : null;
   let artistIndex: number | null = usePresetColumns ? 1 : null;
   let durationIndex: number | null = null;
-  let albumIndex: number | null = usePresetColumns ? 2 : null;
+  // collaborative playlists have duration in flexColumns (between artist and album)
+  let albumIndex: number | null = isCollaborative ? 3 : usePresetColumns ? 2 : null;
   const userChannelIndexes: number[] = [];
   let unrecognizedIndex: number | null = null;
 

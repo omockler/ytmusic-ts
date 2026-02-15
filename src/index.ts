@@ -20,3 +20,4 @@ export type { HomeSection, ArtistFull, AlbumFull, SongFull, Lyrics } from "./mod
 export type { WatchTrack, WatchPlaylist } from "./models/watch.js";
 export type { MoodCategory, ChartSong, ChartArtist } from "./models/explore.js";
 export type { LibrarySong, LibraryAlbum, LibraryArtist, LibraryPlaylist, LibraryOrder, Rating, AccountInfo } from "./models/library.js";
+export type { PrivacyStatus, PlaylistItem, Playlist } from "./models/playlists.js";

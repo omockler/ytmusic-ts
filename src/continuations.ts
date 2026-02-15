@@ -1,5 +1,5 @@
 import { nav } from "./navigation.js";
-import type { JsonDict, JsonList, ParseFunc, RequestFunc } from "./types.js";
+import type { JsonDict, JsonList, ParseFunc, RequestFunc, RequestFuncBody } from "./types.js";
 
 const CONTINUATION_TOKEN = [
   "continuationItemRenderer",
@@ -8,8 +8,47 @@ const CONTINUATION_TOKEN = [
   "token",
 ] as const;
 
+const CONTINUATION_ITEMS = [
+  "onResponseReceivedActions",
+  0,
+  "appendContinuationItemsAction",
+  "continuationItems",
+] as const;
+
 export function getContinuationToken(results: JsonList): string | null {
   return nav<string>(results[results.length - 1], CONTINUATION_TOKEN, true) ?? null;
+}
+
+export async function getContinuations2025(
+  results: JsonDict,
+  limit: number | null,
+  requestFunc: RequestFuncBody,
+  parseFunc: ParseFunc,
+): Promise<JsonList> {
+  const items: JsonList = [];
+  let continuationToken = getContinuationToken(results["contents"]);
+  while (continuationToken && (limit === null || items.length < limit)) {
+    const response = await requestFunc({ continuation: continuationToken });
+    const continuationItems = nav<JsonList>(response, CONTINUATION_ITEMS, true);
+    if (!continuationItems) break;
+
+    const contents = parseFunc(continuationItems);
+    if (contents.length === 0) break;
+    items.push(...contents);
+    continuationToken = getContinuationToken(continuationItems);
+  }
+  return items;
+}
+
+export async function getReloadableContinuations(
+  results: JsonDict,
+  continuationType: string,
+  limit: number | null,
+  requestFunc: RequestFunc,
+  parseFunc: ParseFunc,
+): Promise<JsonList> {
+  const additionalParams = getReloadableContinuationParams(results);
+  return getContinuations(results, continuationType, limit, requestFunc, parseFunc, "", additionalParams);
 }
 
 export function getContinuations(
