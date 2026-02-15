@@ -5,6 +5,11 @@
   "sideEffects": false,
   "description": "TypeScript port of ytmusicapi - interact with YouTube Music API",
   "license": "MIT",
+  "author": "omockler",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/omockler/ytmusic-ts.git"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -41,7 +46,8 @@
     "lint": "eslint 'src/**/*.ts'",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "ci": "yarn typecheck && yarn lint && yarn test && yarn build"
+    "ci": "yarn typecheck && yarn lint && yarn test && yarn build",
+    "prepublishOnly": "yarn ci"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.0.0",

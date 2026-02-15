@@ -1,5 +1,7 @@
 # ytmusic-ts
 
+[![npm version](https://img.shields.io/npm/v/ytmusic-ts)](https://www.npmjs.com/package/ytmusic-ts)
+
 TypeScript port of [ytmusicapi](https://github.com/sigma67/ytmusicapi) — interact with the YouTube Music API.
 
 ## Installation
