@@ -6,3 +6,4 @@ export { parseAlbumHeader, parseAlbumHeader2024, parseAlbumPlaylistIdIfExists } 
 export { getSearchResultType, parseTopResult, parseSearchResult, parseSearchResults, getSearchParams, parseSearchSuggestions, ALL_RESULT_TYPES, API_RESULT_TYPES } from "./search.js";
 export { parseWatchPlaylist, parseWatchTrack, getTabBrowseId } from "./watch.js";
 export { parseChartSong, parseTrendingItem, parseChartPlaylist, parseChartArtist, parseRanking } from "./explore.js";
+export { getLibraryContents, parseLibrarySongs, parsePlaylistItems, parsePlaylistItem, parseLibraryAlbums, parseAlbums, parseLibraryArtists, parseArtists } from "./library.js";

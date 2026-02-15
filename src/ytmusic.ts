@@ -14,12 +14,14 @@ import { createHeaderProvider } from "./auth/headers.js";
 import { AuthType } from "./auth/types.js";
 import type { AuthConfig } from "./auth/types.js";
 import type { JsonDict, JsonList } from "./types.js";
+import type { LibraryOrder, Rating } from "./models/library.js";
 
 // Mixin imports
 import * as searchMixin from "./mixins/search.js";
 import * as browsingMixin from "./mixins/browsing.js";
 import * as watchMixin from "./mixins/watch.js";
 import * as exploreMixin from "./mixins/explore.js";
+import * as libraryMixin from "./mixins/library.js";
 
 export interface YTMusicConfig {
   auth?: AuthConfig;
@@ -193,5 +195,92 @@ export class YTMusic {
   /** Get latest explore data from YouTube Music. */
   getExplore(): Promise<JsonDict> {
     return exploreMixin.getExplore(this);
+  }
+
+  // --- Library ---
+
+  /** Get information about the authenticated user's account. */
+  getAccountInfo(): Promise<JsonDict> {
+    return libraryMixin.getAccountInfo(this);
+  }
+
+  /** Get playlists in the user's library. */
+  getLibraryPlaylists(limit: number | null = 25): Promise<JsonList> {
+    return libraryMixin.getLibraryPlaylists(this, limit);
+  }
+
+  /** Get songs in the user's library. */
+  getLibrarySongs(limit: number | null = 25, order?: LibraryOrder): Promise<JsonList> {
+    return libraryMixin.getLibrarySongs(this, limit, order);
+  }
+
+  /** Get albums in the user's library. */
+  getLibraryAlbums(limit: number | null = 25, order?: LibraryOrder): Promise<JsonList> {
+    return libraryMixin.getLibraryAlbums(this, limit, order);
+  }
+
+  /** Get artists of songs in the user's library. */
+  getLibraryArtists(limit: number | null = 25, order?: LibraryOrder): Promise<JsonList> {
+    return libraryMixin.getLibraryArtists(this, limit, order);
+  }
+
+  /** Get artists the user has subscribed to. */
+  getLibrarySubscriptions(limit: number | null = 25, order?: LibraryOrder): Promise<JsonList> {
+    return libraryMixin.getLibrarySubscriptions(this, limit, order);
+  }
+
+  /** Get podcasts in the user's library. */
+  getLibraryPodcasts(limit: number | null = 25, order?: LibraryOrder): Promise<JsonList> {
+    return libraryMixin.getLibraryPodcasts(this, limit, order);
+  }
+
+  /** Get channels in the user's library. */
+  getLibraryChannels(limit: number | null = 25, order?: LibraryOrder): Promise<JsonList> {
+    return libraryMixin.getLibraryChannels(this, limit, order);
+  }
+
+  /** Get the user's play history. */
+  getHistory(): Promise<JsonList> {
+    return libraryMixin.getHistory(this);
+  }
+
+  /** Add an item to the user's play history. Accepts videoId or pre-fetched song dict. */
+  addHistoryItem(songOrVideoId: string | JsonDict): Promise<JsonDict> {
+    return libraryMixin.addHistoryItem(this, songOrVideoId);
+  }
+
+  /** Get liked songs. */
+  getLikedSongs(limit: number | null = 100): Promise<JsonDict> {
+    return libraryMixin.getLikedSongs(this, limit);
+  }
+
+  /** Rate a song (like/dislike/remove rating). */
+  rateSong(videoId: string, rating: Rating = "INDIFFERENT"): Promise<JsonDict> {
+    return libraryMixin.rateSong(this, videoId, rating);
+  }
+
+  /** Rate a playlist (add to/remove from library). */
+  ratePlaylist(playlistId: string, rating: Rating = "INDIFFERENT"): Promise<JsonDict> {
+    return libraryMixin.ratePlaylist(this, playlistId, rating);
+  }
+
+  /** Add or remove songs from library using feedback tokens. */
+  editSongLibraryStatus(feedbackTokens: string[]): Promise<JsonDict> {
+    return libraryMixin.editSongLibraryStatus(this, feedbackTokens);
+  }
+
+  /** Remove items from play history using feedback tokens. */
+  removeHistoryItems(feedbackTokens: string[]): Promise<JsonDict> {
+    return libraryMixin.removeHistoryItems(this, feedbackTokens);
+  }
+
+  /** Subscribe to artists. */
+  subscribeArtists(channelIds: string[]): Promise<JsonDict> {
+    return libraryMixin.subscribeArtists(this, channelIds);
+  }
+
+  /** Unsubscribe from artists. */
+  unsubscribeArtists(channelIds: string[]): Promise<JsonDict> {
+    return libraryMixin.unsubscribeArtists(this, channelIds);
   }
 }
