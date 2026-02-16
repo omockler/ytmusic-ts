@@ -22,6 +22,7 @@ import * as searchMixin from "./mixins/search.js";
 import * as browsingMixin from "./mixins/browsing.js";
 import * as watchMixin from "./mixins/watch.js";
 import * as exploreMixin from "./mixins/explore.js";
+import * as chartsMixin from "./mixins/charts.js";
 import * as libraryMixin from "./mixins/library.js";
 import * as playlistMixin from "./mixins/playlists.js";
 
@@ -90,6 +91,11 @@ export class YTMusic {
   /** Send a GET request. */
   async sendGetRequest(url: string): Promise<JsonDict> {
     return this.httpClient.get(url);
+  }
+
+  /** Send a GET request and return raw text. */
+  async sendGetRequestText(url: string): Promise<string> {
+    return this.httpClient.getText(url);
   }
 
   /** Throws if the client is not authenticated. */
@@ -169,6 +175,36 @@ export class YTMusic {
     return browsingMixin.getUserPlaylists(this, channelId, params);
   }
 
+  /** Retrieve a list of videos for a given user. */
+  getUserVideos(channelId: string, params: string): Promise<JsonList> {
+    return browsingMixin.getUserVideos(this, channelId, params);
+  }
+
+  /** Get an album's browseId based on its audioPlaylistId. */
+  getAlbumBrowseId(audioPlaylistId: string): Promise<string | null> {
+    return browsingMixin.getAlbumBrowseId(this, audioPlaylistId);
+  }
+
+  /** Extract the URL for the base.js script from YouTube Music. */
+  getBasejsUrl(): Promise<string> {
+    return browsingMixin.getBasejsUrl(this);
+  }
+
+  /** Fetch the signatureTimestamp from YouTube Music's base.js. */
+  getSignatureTimestamp(url?: string): Promise<number> {
+    return browsingMixin.getSignatureTimestamp(this, url);
+  }
+
+  /** Fetch suggested artists from taste profile. Must be authenticated. */
+  getTasteprofile(): Promise<JsonDict> {
+    return browsingMixin.getTasteprofile(this);
+  }
+
+  /** Favorite artists to update recommendations. Must be authenticated. */
+  setTasteprofile(artists: string[], tasteProfile?: JsonDict): Promise<void> {
+    return browsingMixin.setTasteprofile(this, artists, tasteProfile);
+  }
+
   // --- Watch ---
 
   /** Get a watch playlist for a song or video. */
@@ -197,6 +233,13 @@ export class YTMusic {
   /** Get latest explore data from YouTube Music. */
   getExplore(): Promise<JsonDict> {
     return exploreMixin.getExplore(this);
+  }
+
+  // --- Charts ---
+
+  /** Get latest charts data from YouTube Music. */
+  getCharts(country = "ZZ"): Promise<JsonDict> {
+    return chartsMixin.getCharts(this, country);
   }
 
   // --- Library ---

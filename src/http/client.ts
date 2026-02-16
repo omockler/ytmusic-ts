@@ -49,12 +49,20 @@ export class HttpClient {
     });
   }
 
+  async getText(url: string, extraHeaders?: Record<string, string>): Promise<string> {
+    const headers = await this.buildHeaders(extraHeaders);
+    return this.executeWithRetryText(url, {
+      method: "GET",
+      headers,
+    });
+  }
+
   private async buildHeaders(extra?: Record<string, string>): Promise<Record<string, string>> {
     const base = this.headerProvider ? await this.headerProvider() : {};
     return extra ? { ...base, ...extra } : { ...base };
   }
 
-  private async executeWithRetry(url: string, init: RequestInit): Promise<JsonDict> {
+  private async executeWithRetryRaw(url: string, init: RequestInit): Promise<Response> {
     let lastError: Error | undefined;
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
@@ -88,16 +96,11 @@ export class HttpClient {
           );
         }
 
-        try {
-          return await response.json();
-        } catch {
-          throw new YTMusicParseError("Failed to parse response as JSON");
-        }
+        return response;
       } catch (error) {
         if (
           error instanceof YTMusicAuthError ||
-          error instanceof YTMusicServerError ||
-          error instanceof YTMusicParseError
+          error instanceof YTMusicServerError
         ) {
           throw error;
         }
@@ -119,6 +122,20 @@ export class HttpClient {
       this.maxRetries + 1,
       null,
     );
+  }
+
+  private async executeWithRetryText(url: string, init: RequestInit): Promise<string> {
+    const response = await this.executeWithRetryRaw(url, init);
+    return response.text();
+  }
+
+  private async executeWithRetry(url: string, init: RequestInit): Promise<JsonDict> {
+    const response = await this.executeWithRetryRaw(url, init);
+    try {
+      return await response.json();
+    } catch {
+      throw new YTMusicParseError("Failed to parse response as JSON");
+    }
   }
 
   private sleep(ms: number): Promise<void> {

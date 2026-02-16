@@ -1,5 +1,6 @@
 import type { YTMusic } from "../ytmusic.js";
 import { YTMusicError } from "../errors.js";
+import { YTM_DOMAIN } from "../constants.js";
 import type { JsonDict, JsonList } from "../types.js";
 import {
   nav,
@@ -27,6 +28,8 @@ import {
   NAVIGATION_PLAYLIST_ID,
   THUMBNAILS,
   RUN_TEXT,
+  TASTE_PROFILE_ITEMS,
+  TASTE_PROFILE_ARTIST,
 } from "../navigation.js";
 import { getContinuations, getReloadableContinuationParams } from "../continuations.js";
 import {
@@ -389,4 +392,104 @@ export async function getLyrics(ytmusic: YTMusic, browseId: string): Promise<Jso
     source: nav(response, ["contents", ...SECTION_LIST_ITEM, ...DESCRIPTION_SHELF, ...RUN_TEXT], true) ?? null,
     hasTimestamps: false,
   };
+}
+
+export async function getUserVideos(
+  ytmusic: YTMusic,
+  channelId: string,
+  params: string,
+): Promise<JsonList> {
+  const endpoint = "browse";
+  const body: JsonDict = { browseId: channelId, params };
+  const response = await ytmusic.sendRequest(endpoint, body);
+  const results = nav<JsonList>(
+    response,
+    [...SINGLE_COLUMN_TAB, ...SECTION_LIST_ITEM, ...GRID_ITEMS],
+    true,
+  );
+  if (!results) return [];
+  return parseContentList(results, parseVideo);
+}
+
+export async function getAlbumBrowseId(
+  ytmusic: YTMusic,
+  audioPlaylistId: string,
+): Promise<string | null> {
+  const url = `${YTM_DOMAIN}/playlist?list=${encodeURIComponent(audioPlaylistId)}`;
+  const response = await ytmusic.sendGetRequestText(url);
+  // Decode unicode escape sequences to match Python's unicode_escape handling
+  const decoded = response.replace(
+    /\\u[\dA-Fa-f]{4}/g,
+    (match) => String.fromCharCode(parseInt(match.slice(2), 16)),
+  );
+  const matches = decoded.match(/"MPRE.+?"/);
+  if (matches) {
+    return matches[0].replace(/"/g, "");
+  }
+  return null;
+}
+
+export async function getBasejsUrl(ytmusic: YTMusic): Promise<string> {
+  const response = await ytmusic.sendGetRequestText(YTM_DOMAIN);
+  const match = response.match(/jsUrl"\s*:\s*"([^"]+)"/);
+  if (!match) {
+    throw new YTMusicError("Could not identify the URL for base.js player.");
+  }
+  return YTM_DOMAIN + match[1];
+}
+
+export async function getSignatureTimestamp(
+  ytmusic: YTMusic,
+  url?: string,
+): Promise<number> {
+  const basejsUrl = url ?? await getBasejsUrl(ytmusic);
+  const response = await ytmusic.sendGetRequestText(basejsUrl);
+  const match = response.match(/signatureTimestamp[:=](\d+)/);
+  if (!match) {
+    throw new YTMusicError("Unable to identify the signatureTimestamp.");
+  }
+  return parseInt(match[1], 10);
+}
+
+export async function getTasteprofile(ytmusic: YTMusic): Promise<JsonDict> {
+  ytmusic.checkAuth();
+  const response = await ytmusic.sendRequest("browse", { browseId: "FEmusic_tastebuilder" });
+  const profiles = nav<JsonList>(response, TASTE_PROFILE_ITEMS);
+
+  const tasteProfiles: JsonDict = {};
+  for (const itemList of profiles) {
+    for (const item of itemList["tastebuilderItemListRenderer"]["contents"]) {
+      const artist = nav<JsonList>(item["tastebuilderItemRenderer"], TASTE_PROFILE_ARTIST)[0]["text"];
+      tasteProfiles[artist] = {
+        selectionValue: item["tastebuilderItemRenderer"]["selectionFormValue"],
+        impressionValue: item["tastebuilderItemRenderer"]["impressionFormValue"],
+      };
+    }
+  }
+  return tasteProfiles;
+}
+
+export async function setTasteprofile(
+  ytmusic: YTMusic,
+  artists: string[],
+  tasteProfile?: JsonDict,
+): Promise<void> {
+  ytmusic.checkAuth();
+  const profile = tasteProfile ?? await getTasteprofile(ytmusic);
+  const formData: JsonDict = {
+    impressionValues: Object.values(profile).map(
+      (p: JsonDict) => p["impressionValue"],
+    ),
+    selectedValues: [] as string[],
+  };
+
+  for (const artist of artists) {
+    if (!(artist in profile)) {
+      throw new YTMusicError(`The artist ${artist} was not present in taste!`);
+    }
+    (formData["selectedValues"] as string[]).push(profile[artist]["selectionValue"]);
+  }
+
+  const body: JsonDict = { browseId: "FEmusic_home", formData };
+  await ytmusic.sendRequest("browse", body);
 }

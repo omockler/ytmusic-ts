@@ -23,16 +23,16 @@ Feature support compared to the upstream Python [ytmusicapi](https://github.com/
 | `getArtistAlbums` | Supported |
 | `getUser` | Supported |
 | `getUserPlaylists` | Supported |
-| `getUserVideos` | Not yet |
-| `getAlbumBrowseId` | Not yet |
+| `getUserVideos` | Supported |
+| `getAlbumBrowseId` | Supported |
 | `getAlbum` | Supported |
 | `getSong` | Supported |
 | `getSongRelated` | Supported |
 | `getLyrics` | Supported |
-| `getBasejsUrl` | Not yet |
-| `getSignatureTimestamp` | Not yet |
-| `getTasteprofile` | Not yet |
-| `setTasteprofile` | Not yet |
+| `getBasejsUrl` | Supported |
+| `getSignatureTimestamp` | Supported |
+| `getTasteprofile` | Supported |
+| `setTasteprofile` | Supported |
 
 ### Search
 
@@ -100,7 +100,9 @@ Not yet ported. Includes: `getChannel`, `getChannelEpisodes`, `getPodcast`, `get
 
 ### Charts
 
-Not yet ported. Includes: `getCharts`.
+| Function | Status |
+|---|---|
+| `getCharts` | Supported |
 
 ## License
 
