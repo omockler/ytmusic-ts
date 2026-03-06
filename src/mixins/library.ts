@@ -1,5 +1,5 @@
 import type { YTMusic } from "../ytmusic.js";
-import { YTMusicError, YTMusicServerError } from "../errors.js";
+import { YTMusicError } from "../errors.js";
 import type { JsonDict, JsonList } from "../types.js";
 import type { LibraryOrder, Rating } from "../models/library.js";
 import {
@@ -9,7 +9,6 @@ import {
   MUSIC_SHELF,
   TITLE_TEXT,
   GRID,
-  RUN_TEXT,
 } from "../navigation.js";
 import { getContinuations } from "../continuations.js";
 import { parseContentList, parsePlaylist, parseAlbum } from "../parsers/browsing.js";
@@ -58,15 +57,32 @@ export async function getAccountInfo(ytmusic: YTMusic): Promise<JsonDict> {
   ytmusic.checkAuth();
   const response = await ytmusic.sendRequest("account/account_menu", {});
 
-  const ACCOUNT_INFO = [
-    "actions", 0, "openPopupAction", "popup", "multiPageMenuRenderer",
-    "header", "activeAccountHeaderRenderer",
-  ] as const;
   const ACCOUNT_RUNS_TEXT = ["runs", 0, "text"] as const;
 
-  const accountName = nav<string>(response, [...ACCOUNT_INFO, "accountName", ...ACCOUNT_RUNS_TEXT]);
-  const channelHandle = nav<string>(response, [...ACCOUNT_INFO, "channelHandle", ...ACCOUNT_RUNS_TEXT], true) ?? null;
-  const accountPhotoUrl = nav<string>(response, [...ACCOUNT_INFO, "accountPhoto", "thumbnails", 0, "url"]);
+  // Try known response structures for the account header renderer
+  const ACCOUNT_INFO_PATHS = [
+    // Current structure
+    ["actions", 0, "openPopupAction", "popup", "multiPageMenuRenderer",
+     "header", "activeAccountHeaderRenderer"],
+    // Alternative structure seen in some regions/clients
+    ["actions", 0, "openPopupAction", "popup", "multiPageMenuRenderer",
+     "header", "accountHeaderRenderer"],
+  ] as const;
+
+  let accountHeader: JsonDict | undefined;
+  for (const path of ACCOUNT_INFO_PATHS) {
+    accountHeader = nav<JsonDict>(response, [...path], true);
+    if (accountHeader) break;
+  }
+
+  if (!accountHeader) {
+    // Fallback: return what we can without throwing
+    return { accountName: null, channelHandle: null, accountPhotoUrl: null };
+  }
+
+  const accountName = nav<string>(accountHeader, ["accountName", ...ACCOUNT_RUNS_TEXT], true) ?? null;
+  const channelHandle = nav<string>(accountHeader, ["channelHandle", ...ACCOUNT_RUNS_TEXT], true) ?? null;
+  const accountPhotoUrl = nav<string>(accountHeader, ["accountPhoto", "thumbnails", 0, "url"], true) ?? null;
 
   return { accountName, channelHandle, accountPhotoUrl };
 }
@@ -361,8 +377,9 @@ export async function getHistory(ytmusic: YTMusic): Promise<JsonList> {
   for (const content of results) {
     const data = nav<JsonList>(content, [...MUSIC_SHELF, "contents"], true);
     if (!data) {
-      const error = nav<string>(content, ["musicNotifierShelfRenderer", "title", ...RUN_TEXT], true);
-      throw new YTMusicServerError(error ?? "Unknown history error", 0);
+      // Skip non-music shelves (e.g. "musicNotifierShelfRenderer" prompts
+      // like "Turn on your history" or other notifications)
+      continue;
     }
     const songlist = parsePlaylistItems(data);
     const played = nav<string>(content["musicShelfRenderer"], TITLE_TEXT);
